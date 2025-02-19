@@ -85,14 +85,21 @@ plt.grid(True, linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.show()
 
+
+
 # Analysis of agents with different parameters
 risk_averse_agents = wealth[risk_aversion > 0.5]
 risk_seeking_agents = wealth[risk_aversion <= 0.5]
 
-plt.figure(figsize=(12, 6))
+# Further categorize risk-averse agents
+low_risk_averse_agents = wealth[(risk_aversion > 0.5) & (risk_aversion <= 0.7)]
+medium_risk_averse_agents = wealth[(risk_aversion > 0.7) & (risk_aversion <= 0.9)]
+high_risk_averse_agents = wealth[risk_aversion > 0.9]
+
+plt.figure(figsize=(18, 12))
 
 # Plot wealth distribution for risk-averse agents
-plt.subplot(1, 2, 1)
+plt.subplot(2, 3, 1)
 plt.hist(risk_averse_agents, bins=30, color='r', alpha=0.7)
 plt.xlabel('Wealth', fontsize=12)
 plt.ylabel('Frequency', fontsize=12)
@@ -100,11 +107,35 @@ plt.title('Wealth Distribution of Risk-Averse Agents', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 
 # Plot wealth distribution for risk-seeking agents
-plt.subplot(1, 2, 2)
+plt.subplot(2, 3, 2)
 plt.hist(risk_seeking_agents, bins=30, color='b', alpha=0.7)
 plt.xlabel('Wealth', fontsize=12)
 plt.ylabel('Frequency', fontsize=12)
 plt.title('Wealth Distribution of Risk-Seeking Agents', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Plot wealth distribution for low risk-averse agents
+plt.subplot(2, 3, 3)
+plt.hist(low_risk_averse_agents, bins=30, color='orange', alpha=0.7)
+plt.xlabel('Wealth', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Wealth Distribution of Low Risk-Averse Agents', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Plot wealth distribution for medium risk-averse agents
+plt.subplot(2, 3, 4)
+plt.hist(medium_risk_averse_agents, bins=30, color='purple', alpha=0.7)
+plt.xlabel('Wealth', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Wealth Distribution of Medium Risk-Averse Agents', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Plot wealth distribution for high risk-averse agents
+plt.subplot(2, 3, 5)
+plt.hist(high_risk_averse_agents, bins=30, color='green', alpha=0.7)
+plt.xlabel('Wealth', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Wealth Distribution of High Risk-Averse Agents', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 
 plt.tight_layout()
