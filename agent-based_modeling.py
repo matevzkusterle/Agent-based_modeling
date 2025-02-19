@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
 # Parameters
@@ -55,8 +56,8 @@ for t in range(1, n_steps):
         noise = np.random.normal(0, 0.01)
         
         # Calculate probabilities based on initial wealth and risk aversion
-        buy_prob = logistic(0.02 - (wealth[i] - 1000) / 9000 * 0.02 - risk_aversion[i] * 0.01 + expected_return + noise)
-        sell_prob = logistic(-0.01 + (wealth[i] - 1000) / 9000 * 0.01 + risk_aversion[i] * 0.01 - expected_return - noise)
+        buy_prob = logistic(0.02 + (wealth[i] - 1000) / 9000 * 0.02 - risk_aversion[i] * 0.6 + expected_return + noise)
+        sell_prob = logistic(-0.01 + (wealth[i] - 1000) / 9000 * 0.01 + risk_aversion[i] * 0.2 - expected_return + noise)
         
         # Decision to buy or sell based on probabilities
         if np.random.rand() < buy_prob and cash[i] >= price[t-1]:
@@ -237,7 +238,8 @@ def f():
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.show()
 
-f()
+#f()
+
 # The scatter plots show the relationship between initial wealth, risk aversion,
 # and the number of buys and sales made by each agent.
 # The plots provide insights into how different factors influence agent behavior
@@ -259,4 +261,51 @@ f()
 # Overall, agent-based modeling provides a powerful framework for studying complex systems
 # and understanding emergent phenomena in financial markets and other domains.
 
+# Prepare the data for linear regression
+X = agent_data[['Risk Aversion', 'Initial Wealth']]
+y = agent_data['Buys']
+
+# Create and fit the linear regression model
+model = LinearRegression()
+model.fit(X, y)
+
+# Get the coefficients and intercept
+coefficients = model.coef_
+intercept = model.intercept_
+
+print(f"Coefficients: {coefficients}")
+print(f"Intercept: {intercept}")
+
+# Predict the number of buys using the linear regression model
+y_pred = model.predict(X)
+
+# Calculate R-squared
+r_squared = model.score(X, y)
+
+print(f"R-squared: {r_squared:.2f}")
+
+
+# Linear regression for y = Buys and x = Wealth
+X_wealth = agent_data[['Initial Wealth']]
+model_wealth = LinearRegression()
+model_wealth.fit(X_wealth, y)
+coefficients_wealth = model_wealth.coef_
+intercept_wealth = model_wealth.intercept_
+r_squared_wealth = model_wealth.score(X_wealth, y)
+
+print(f"Wealth Model Coefficients: {coefficients_wealth}")
+print(f"Wealth Model Intercept: {intercept_wealth}")
+print(f"Wealth Model R-squared: {r_squared_wealth:.2f}")
+
+# Linear regression for y = Buys and x = Risk Aversion
+X_risk_aversion = agent_data[['Risk Aversion']]
+model_risk_aversion = LinearRegression()
+model_risk_aversion.fit(X_risk_aversion, y)
+coefficients_risk_aversion = model_risk_aversion.coef_
+intercept_risk_aversion = model_risk_aversion.intercept_
+r_squared_risk_aversion = model_risk_aversion.score(X_risk_aversion, y)
+
+print(f"Risk Aversion Model Coefficients: {coefficients_risk_aversion}")
+print(f"Risk Aversion Model Intercept: {intercept_risk_aversion}")
+print(f"Risk Aversion Model R-squared: {r_squared_risk_aversion:.2f}")
 
