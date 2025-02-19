@@ -8,8 +8,12 @@ n_steps = 100    # Number of time steps
 initial_price = 100  # Initial price of the financial instrument
 
 # Initialize agents
-wealth = np.random.uniform(1000, 10000, n_agents)  # Initial wealth for each agent
+#wealth = np.random.uniform(1000, 10000, n_agents)  # Initial wealth for each agent
+#for testing:
+wealth = np.full(n_agents, 5000)  # Initial wealth for each agent set to 5000
 risk_aversion = np.random.uniform(0, 1, n_agents)  # Risk aversion for each agent (0 = risk-seeking, 1 = risk-averse)
+#for testing:
+#risk_aversion = np.full(n_agents, 0.5)  # Risk aversion for each agent set to 0.5
 cash = wealth.copy()  # All wealth starts as cash
 holdings = np.zeros(n_agents)  # No initial holdings of the financial instrument
 
@@ -135,9 +139,9 @@ plt.tight_layout()
 plt.show()
 
 # Further categorize risk-averse agents
-low_risk_averse_agents = wealth[(risk_aversion > 0.5) & (risk_aversion <= 0.7)]
-medium_risk_averse_agents = wealth[(risk_aversion > 0.7) & (risk_aversion <= 0.9)]
-high_risk_averse_agents = wealth[risk_aversion > 0.9]
+low_risk_averse_agents = wealth[(risk_aversion > 0) & (risk_aversion <= 0.33)]
+medium_risk_averse_agents = wealth[(risk_aversion > 0.33) & (risk_aversion <= 0.66)]
+high_risk_averse_agents = wealth[risk_aversion > 0.66]
 
 plt.figure(figsize=(18, 12))
 
