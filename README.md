@@ -4,8 +4,8 @@ This repository contains Python scripts for simulating agent-based models in a f
 
 ## Files
 
-- `agent-based_modeling.py`: Simulates agent-based modeling with market noise.
-- `agent-based_modeling_with_probabilities.py`: Simulates agent-based modeling with probabilistic decision-making.
+- `agent_based_modeling.py`: Simulates agent-based modeling with market noise.
+- `agent_based_modeling_with_probabilities.py`: Simulates agent-based modeling with probabilistic decision-making.
 
 ## Simulation Parameters
 
@@ -43,5 +43,5 @@ The simulation results are plotted using `matplotlib`:
 To run the simulations, execute the Python scripts:
 
 ```sh
-python agent-based_modeling.py
-python agent-based_modeling_with_probabilities.py
+python agent_based_modeling.py
+```
