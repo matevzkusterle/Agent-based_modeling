@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # Parameters
@@ -12,18 +13,26 @@ risk_aversion = np.random.uniform(0, 1, n_agents)  # Risk aversion for each agen
 cash = wealth.copy()  # All wealth starts as cash
 holdings = np.zeros(n_agents)  # No initial holdings of the financial instrument
 
+# Create a DataFrame to store agent data
+agent_data = pd.DataFrame({
+    'Agent': np.arange(n_agents),
+    'Initial Wealth': wealth,
+    'Risk Aversion': risk_aversion,
+    'Buys': np.zeros(n_agents, dtype=int),
+    'Sales': np.zeros(n_agents, dtype=int)
+})
+
 # Initialize market
 price = np.zeros(n_steps)  # Array to store price at each time step
 price[0] = initial_price  # Set initial price
+price_changes = np.zeros(n_steps-1)  # Track price changes for volatility calculations
 
-# Simulation loop
 for t in range(1, n_steps):
-    # Agents make decisions
     buy_orders = 0
     sell_orders = 0
     
     for i in range(n_agents):
-        # Simple trend-following rule: expected return based on past price movement
+        # Calculate expected return
         if t > 1 and price[t-2] != 0:
             expected_return = (price[t-1] - price[t-2]) / price[t-2]
         else:
@@ -32,29 +41,26 @@ for t in range(1, n_steps):
         # Add a small random factor to simulate market noise
         noise = np.random.normal(0, 0.01)
         
-        # Risk-averse agents are less likely to buy or sell
-        if risk_aversion[i] > 0.5:
-            if expected_return + noise > 0 and cash[i] >= price[t-1]:  # Buy if expected return is positive and has enough cash
-                buy_orders += 1
-                holdings[i] += 1
-                cash[i] -= price[t-1]
-            elif expected_return + noise < 0 and holdings[i] > 0:  # Sell if expected return is negative and has holdings
-                sell_orders += 1
-                holdings[i] -= 1
-                cash[i] += price[t-1]
-        else:  # Risk-seeking agents are more likely to buy or sell
-            if expected_return + noise > 0 and cash[i] >= price[t-1]:  # Buy if expected return is positive and has enough cash
-                buy_orders += 1
-                holdings[i] += 1
-                cash[i] -= price[t-1]
-            elif expected_return + noise < 0 and holdings[i] > 0:  # Sell if expected return is negative and has holdings
-                sell_orders += 1
-                holdings[i] -= 1
-                cash[i] += price[t-1]
+        # Linear thresholds based on initial wealth and risk aversion
+        buy_threshold = 0.02 - (wealth[i] - 1000) / 9000 * 0.02 - risk_aversion[i] * 0.01
+        sell_threshold = -0.01 + (wealth[i] - 1000) / 9000 * 0.01 + risk_aversion[i] * 0.01
+        
+        # Decision to buy or sell
+        if expected_return + noise > buy_threshold and cash[i] >= price[t-1]:
+            buy_orders += 1
+            holdings[i] += 1
+            cash[i] -= price[t-1]
+            agent_data.at[i, 'Buys'] += 1
+        elif expected_return + noise < sell_threshold and holdings[i] > 0:
+            sell_orders += 1
+            holdings[i] -= 1
+            cash[i] += price[t-1]
+            agent_data.at[i, 'Sales'] += 1
     
     # Update price based on supply and demand imbalance
     imbalance = buy_orders - sell_orders
     price[t] = price[t-1] * (1 + 0.01 * imbalance / n_agents)  # Normalize by number of agents
+    price_changes[t-1] = price[t] - price[t-1]  # Track price change
     
     # Print the number of buy and sell orders
     print(f"Time step {t}: Buy orders = {buy_orders}, Sell orders = {sell_orders}, Imbalance = {imbalance}")
@@ -62,11 +68,35 @@ for t in range(1, n_steps):
     # Update agent wealth
     wealth = cash + holdings * price[t]  # Wealth = cash + (holdings × current price)
 
-# Plot results
+# Update agent_data with final wealth
+agent_data['Final Wealth'] = wealth
+
+# Compute volatility (standard deviation of price changes)
+volatility = np.std(price_changes)
+
+# Plot initial wealth distribution
 plt.figure(figsize=(12, 6))
+plt.hist(agent_data['Initial Wealth'], bins=30, color='g', alpha=0.7)
+plt.xlabel('Initial Wealth', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Initial Wealth Distribution', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Plot risk aversion distribution
+plt.figure(figsize=(12, 6))
+plt.hist(agent_data['Risk Aversion'], bins=30, color='b', alpha=0.7)
+plt.xlabel('Risk Aversion', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Risk Aversion Distribution', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Plot results
+plt.figure(figsize=(15, 8))
 
 # Plot price dynamics
-plt.subplot(1, 2, 1)
+plt.subplot(2, 2, 1)
 plt.plot(range(n_steps), price, label='Price', color='b', linewidth=2)
 plt.xlabel('Time', fontsize=12)
 plt.ylabel('Price', fontsize=12)
@@ -75,21 +105,34 @@ plt.grid(True, linestyle='--', alpha=0.7)
 plt.legend()
 
 # Plot wealth distribution at the end of the simulation
-plt.subplot(1, 2, 2)
+plt.subplot(2, 2, 2)
 plt.hist(wealth, bins=30, color='g', alpha=0.7)
 plt.xlabel('Wealth', fontsize=12)
 plt.ylabel('Frequency', fontsize=12)
-plt.title('Wealth Distribution at t={}'.format(n_steps), fontsize=14)
+plt.title(f'Wealth Distribution at t={n_steps}', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Plot price volatility
+plt.subplot(2, 2, 3)
+plt.plot(range(n_steps-1), price_changes, label='Price Change', color='r', alpha=0.7)
+plt.xlabel('Time', fontsize=12)
+plt.ylabel('Price Change', fontsize=12)
+plt.title(f'Price Volatility (Std Dev: {volatility:.2f})', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+
+# Compare final wealth distributions
+plt.subplot(2, 2, 4)
+plt.hist(agent_data[agent_data['Risk Aversion'] > 0.5]['Final Wealth'], bins=30, color='r', alpha=0.6, label='Risk-Averse')
+plt.hist(agent_data[agent_data['Risk Aversion'] <= 0.5]['Final Wealth'], bins=30, color='b', alpha=0.6, label='Risk-Seeking')
+plt.xlabel('Final Wealth', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.title('Final Wealth Distribution by Risk Group', fontsize=14)
+plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 
 plt.tight_layout()
 plt.show()
-
-
-
-# Analysis of agents with different parameters
-risk_averse_agents = wealth[risk_aversion > 0.5]
-risk_seeking_agents = wealth[risk_aversion <= 0.5]
 
 # Further categorize risk-averse agents
 low_risk_averse_agents = wealth[(risk_aversion > 0.5) & (risk_aversion <= 0.7)]
@@ -97,22 +140,6 @@ medium_risk_averse_agents = wealth[(risk_aversion > 0.7) & (risk_aversion <= 0.9
 high_risk_averse_agents = wealth[risk_aversion > 0.9]
 
 plt.figure(figsize=(18, 12))
-
-# Plot wealth distribution for risk-averse agents
-plt.subplot(2, 3, 1)
-plt.hist(risk_averse_agents, bins=30, color='r', alpha=0.7)
-plt.xlabel('Wealth', fontsize=12)
-plt.ylabel('Frequency', fontsize=12)
-plt.title('Wealth Distribution of Risk-Averse Agents', fontsize=14)
-plt.grid(True, linestyle='--', alpha=0.7)
-
-# Plot wealth distribution for risk-seeking agents
-plt.subplot(2, 3, 2)
-plt.hist(risk_seeking_agents, bins=30, color='b', alpha=0.7)
-plt.xlabel('Wealth', fontsize=12)
-plt.ylabel('Frequency', fontsize=12)
-plt.title('Wealth Distribution of Risk-Seeking Agents', fontsize=14)
-plt.grid(True, linestyle='--', alpha=0.7)
 
 # Plot wealth distribution for low risk-averse agents
 plt.subplot(2, 3, 3)
@@ -139,4 +166,58 @@ plt.title('Wealth Distribution of High Risk-Averse Agents', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 
 plt.tight_layout()
+plt.show()
+
+# Scatter plot of initial wealth vs final wealth
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Initial Wealth'], agent_data['Final Wealth'], alpha=0.5)
+plt.xlabel('Initial Wealth', fontsize=12)
+plt.ylabel('Final Wealth', fontsize=12)
+plt.title('Initial Wealth vs Final Wealth', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Scatter plot of risk aversion vs final wealth
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Risk Aversion'], agent_data['Final Wealth'], alpha=0.5, color='r')
+plt.xlabel('Risk Aversion', fontsize=12)
+plt.ylabel('Final Wealth', fontsize=12)
+plt.title('Risk Aversion vs Final Wealth', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Scatter plot of initial wealth vs number of buys
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Initial Wealth'], agent_data['Buys'], alpha=0.5, color='g')
+plt.xlabel('Initial Wealth', fontsize=12)
+plt.ylabel('Number of Buys', fontsize=12)
+plt.title('Initial Wealth vs Number of Buys', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Scatter plot of initial wealth vs number of sales
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Initial Wealth'], agent_data['Sales'], alpha=0.5, color='b')
+plt.xlabel('Initial Wealth', fontsize=12)
+plt.ylabel('Number of Sales', fontsize=12)
+plt.title('Initial Wealth vs Number of Sales', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Scatter plot of risk aversion vs number of buys
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Risk Aversion'], agent_data['Buys'], alpha=0.5, color='purple')
+plt.xlabel('Risk Aversion', fontsize=12)
+plt.ylabel('Number of Buys', fontsize=12)
+plt.title('Risk Aversion vs Number of Buys', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+# Scatter plot of risk aversion vs number of sales
+plt.figure(figsize=(12, 6))
+plt.scatter(agent_data['Risk Aversion'], agent_data['Sales'], alpha=0.5, color='orange')
+plt.xlabel('Risk Aversion', fontsize=12)
+plt.ylabel('Number of Sales', fontsize=12)
+plt.title('Risk Aversion vs Number of Sales', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
 plt.show()
