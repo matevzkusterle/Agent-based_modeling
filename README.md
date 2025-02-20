@@ -43,5 +43,5 @@ The simulation results are plotted using `matplotlib`:
 To run the simulations, execute the Python scripts:
 
 ```sh
-python agent_based_modeling.py
+python agent-based_modeling.py
 ```
