@@ -2,17 +2,24 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+from scipy.stats import truncnorm
 
 # Parameters
 n_agents = 1000  # Number of agents
 n_steps = 1000    # Number of time steps
 initial_price = 100  # Initial price of the financial instrument
 
+# Function to generate truncated normal distribution
+def truncated_normal(mean=0.5, std=0.1, low=0, upp=1, size=1):
+    return truncnorm(
+        (low - mean) / std, (upp - mean) / std, loc=mean, scale=std).rvs(size)
+
 # Initialize agents
-wealth = np.random.uniform(1000, 10000, n_agents)  # Initial wealth for each agent
+wealth = np.random.lognormal(mean=np.log(5000), sigma=0.2, size=n_agents)
+# Initial wealth for each agent
 #for testing:
 #wealth = np.full(n_agents, 5000)  # Initial wealth for each agent set to 5000
-risk_aversion = np.random.uniform(0, 1, n_agents)  # Risk aversion for each agent (0 = risk-seeking, 1 = risk-averse)
+risk_aversion = truncated_normal(mean=0.5, std=0.1, low=0, upp=1, size=n_agents)  # Risk aversion for each agent (0 = risk-seeking, 1 = risk-averse)
 #for testing:
 #risk_aversion = np.full(n_agents, 0.5)  # Risk aversion for each agent set to 0.5
 cash = wealth.copy()  # All wealth starts as cash
@@ -238,7 +245,7 @@ def f():
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.show()
 
-#f()
+f()
 
 # The scatter plots show the relationship between initial wealth, risk aversion,
 # and the number of buys and sales made by each agent.
