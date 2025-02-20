@@ -2,10 +2,6 @@
 
 This repository contains Python scripts for simulating agent-based models in a financial market. The models simulate the behavior of agents with different levels of risk aversion and their impact on the price dynamics of a financial instrument.
 
-## Files
-
-- `agent_based_modeling.py`: Simulates agent-based modeling with market noise.
-- `agent_based_modeling_with_probabilities.py`: Simulates agent-based modeling with probabilistic decision-making.
 
 ## Simulation Parameters
 
